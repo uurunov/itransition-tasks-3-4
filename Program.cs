@@ -4,21 +4,30 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using UurunovApp.Models;
 using UurunovApp.Services;
+using UurunovApp.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddHttpClient();
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-builder.Services.AddControllers();
+
+builder.Services.AddScoped<IEmailSender, BrevoEmailSender>();
+builder.Services.AddScoped<ActiveUserFilter>();
+
+builder.Services.AddControllers(options =>
+{
+    options.Filters.AddService<ActiveUserFilter>();
+});
+
 builder.Services.AddDataProtection();
+builder.Services.AddAuthentication(IdentityConstants.ApplicationScheme).AddCookie(IdentityConstants.ApplicationScheme);
 builder.Services.AddIdentityCore<ApplicationUser>(options => {
     options.Password.RequireDigit = false;
     options.Password.RequireLowercase = false;
     options.Password.RequireUppercase = false;
     options.Password.RequireNonAlphanumeric = false;
     options.Password.RequiredLength = 1;
-}).AddEntityFrameworkStores<ApplicationDbContext>().AddDefaultTokenProviders();
-builder.Services.AddScoped<IEmailSender, BrevoEmailSender>();
+}).AddEntityFrameworkStores<ApplicationDbContext>().AddDefaultTokenProviders().AddSignInManager();
 
 var app = builder.Build();
 
@@ -39,6 +48,9 @@ app.MapGet("/app/uurunov_dev_gmail_com", (string? x, string? y) =>
 
     return "NaN";
 });
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapControllers();
 app.Run();

@@ -5,6 +5,7 @@ using UurunovApp.Models.Dtos;
 using UurunovApp.Services;
 using Microsoft.AspNetCore.WebUtilities;
 using System.Text;
+using Microsoft.AspNetCore.Authorization;
 
 namespace UurunovApp.Controllers;
 
@@ -15,13 +16,44 @@ public class AuthController : ControllerBase
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IEmailSender _emailSender;
     private readonly IConfiguration _configuration;
-    public AuthController(UserManager<ApplicationUser> userManager, IEmailSender emailSender, IConfiguration configuration)
+    private readonly SignInManager<ApplicationUser> _signInManager;
+    public AuthController(UserManager<ApplicationUser> userManager, IEmailSender emailSender, IConfiguration configuration, SignInManager<ApplicationUser> signInManager)
     {
         _userManager = userManager;
         _emailSender = emailSender;
         _configuration = configuration;
+        _signInManager = signInManager;
     }
 
+    [AllowAnonymous]
+    [HttpPost("login")]
+    public async Task<IActionResult> Login([FromBody] LoginRequest request)
+    {
+        var user = await _userManager.FindByEmailAsync(request.Email);
+
+        if (user == null)
+        {
+            return Unauthorized(new { message = "Invalid email or password." });
+        }
+
+        if (user.Status == UserStatus.Blocked)
+        {
+            return Unauthorized(new { message = "Your account is blocked. Please contact support." });
+        }
+
+        var result = await _signInManager.PasswordSignInAsync(user, request.Password, isPersistent: true, lockoutOnFailure: false);
+        if (!result.Succeeded)
+        {
+            return Unauthorized(new { message = "Invalid email or password." });
+        }
+
+        user.LastLoginTime = DateTime.UtcNow;
+        await _userManager.UpdateAsync(user);
+        
+        return Ok(new { message = "Login successful." });
+    }
+
+    [AllowAnonymous]
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
     {
@@ -49,6 +81,7 @@ public class AuthController : ControllerBase
         return Ok(new { message = "User registered successfully. Please check your email to confirm your account." });
     }
 
+    [AllowAnonymous]
     [HttpGet("confirm-email")]
     public async Task<IActionResult> ConfirmEmail([FromQuery] string userId, [FromQuery] string token)
     {
@@ -81,5 +114,12 @@ public class AuthController : ControllerBase
         }
 
         return Ok(new { message = "Email confirmed successfully. You can now log in." });
+    }
+
+    [HttpGet("me")]
+    public async Task<IActionResult> Me()
+    {
+        var user = await _userManager.GetUserAsync(User);
+        return Ok(new { user!.Name, user.Email, user.Status });
     }
 }
