@@ -1,0 +1,45 @@
+<header class="absolute inset-x-0 top-8 flex flex-col justify-center items-center gap-2">
+  <p-avatar image="images/author.png" class="mr-2" size="xlarge" shape="circle" />
+  <p-chip label="Ulugbek Urunov" />
+</header>
+
+<main class="w-xs 2xl:w-sm">
+  @if (status() === 'loading') {
+    <div class="card flex justify-center">
+      <p-progress-spinner
+        strokeWidth="8"
+        fill="transparent"
+        animationDuration=".5s"
+        [style]="{ width: '50px', height: '50px' }"
+      />
+    </div>
+  }
+
+  @if (status() === 'success') {
+    <div class="flex flex-col gap-4 items-center">
+      <p-avatar icon="pi pi-check-circle" class="mr-2" size="xlarge" shape="circle" />
+
+      <p-panel header="Email Verified">
+        <p class="m-0">Your email has been successfully confirmed.</p>
+      </p-panel>
+
+      <p-button label="Continue to Login" size="small" (click)="onSignIn()" />
+    </div>
+  }
+
+  @if (status() === 'failed') {
+    <div class="flex flex-col gap-4 items-center">
+      <p-avatar icon="pi pi-exclamation-triangle" class="mr-2" size="xlarge" shape="circle" />
+
+      <p-panel header="Email Verified">
+        <p class="m-0">Email confirmation failed. Please try again later.</p>
+      </p-panel>
+
+      <p-button label="Go to Login" size="small" (click)="onSignIn()" />
+    </div>
+  }
+</main>
+
+<footer class="absolute inset-x-0 bottom-8 flex justify-center items-center gap-2">
+  <p-chip class="text-sm" label="uurunov.dev@gmail.com" icon="pi pi-google" />
+</footer>

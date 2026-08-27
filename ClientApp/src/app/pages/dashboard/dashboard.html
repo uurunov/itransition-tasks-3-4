@@ -1,1 +1,21 @@
-<p>dashboard works!</p>
+<div class="h-screen w-screen flex flex-col gap-6 p-4">
+  <header>
+    <p-toolbar>
+      <ng-template #start>
+        <p-avatar [label]="currentUser()?.name.at(0)" class="mr-2" shape="circle" />
+        <p-chip [label]="currentUser()?.email" class="text-xs" />
+      </ng-template>
+      <ng-template #end>
+        <p-button
+          label="Logout"
+          icon="pi pi-sign-out"
+          severity="danger"
+          variant="outlined"
+          size="small"
+          (click)="onLogout($event)"
+        />
+      </ng-template>
+    </p-toolbar>
+  </header>
+  <main class="grow">Bugaga</main>
+</div>

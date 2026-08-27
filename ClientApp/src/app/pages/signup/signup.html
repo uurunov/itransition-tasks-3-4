@@ -3,7 +3,7 @@
   <p-chip label="Ulugbek Urunov" />
 </header>
 
-<main class="w-xs 2xl:w-sm">
+<main class="w-xs 2xl:w-lg">
   @if (isSignUpSucceeded()) {
     <div class="flex flex-col gap-4 items-center">
       <p-avatar icon="pi pi-envelope" class="mr-2" size="xlarge" shape="circle" />
@@ -11,7 +11,8 @@
       <p-panel header="Confirm your email">
         <p class="m-0">
           We've sent an email to <strong>{{ email() }}</strong
-          >. Check your inbox to activate your account.
+          >. <br />
+          Check your inbox to activate your account.
         </p>
       </p-panel>
 

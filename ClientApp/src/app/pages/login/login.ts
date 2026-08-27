@@ -47,7 +47,7 @@ export class Login {
         this.isLoading.set(false);
         this.messageService.add({
           severity: 'success',
-          summary: 'Success',
+          summary: 'Hooray',
           detail: 'Login successful.',
         });
         this.router.navigate(['dashboard']);
@@ -56,7 +56,7 @@ export class Login {
         this.isLoading.set(false);
         this.messageService.add({
           severity: 'error',
-          summary: 'Failure',
+          summary: 'Oops',
           detail: 'Login failed.',
         });
         this.errorMessage.set(err.error?.message ?? 'Login failed. Please try again.');

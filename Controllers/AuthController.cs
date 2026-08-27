@@ -50,7 +50,7 @@ public class AuthController : ControllerBase
         user.LastLoginTime = DateTime.UtcNow;
         await _userManager.UpdateAsync(user);
         
-        return Ok(new { message = "Login successful." });
+        return Ok(new { user!.Name, user.Email, user.Status });
     }
 
     [AllowAnonymous]
@@ -73,8 +73,8 @@ public class AuthController : ControllerBase
 
         var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
         var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
-        var baseUrl = _configuration["App:BaseUrl"];
-        var confirmationLink = $"{baseUrl}/api/Auth/confirm-email?userId={user.Id}&token={encodedToken}";
+        var frontendBaseUrl = _configuration["App:FrontendBaseUrl"];
+        var confirmationLink = $"{frontendBaseUrl}/email-confirmation?userId={user.Id}&token={encodedToken}";
 
         _ = _emailSender.SendEmailAsync(user.Email!, "Confirm your email", $"<p>Please confirm your account by clicking <a href=\"{confirmationLink}\">here</a>.</p>");
 
@@ -82,31 +82,24 @@ public class AuthController : ControllerBase
     }
 
     [AllowAnonymous]
-    [HttpGet("confirm-email")]
-    public async Task<IActionResult> ConfirmEmail([FromQuery] string userId, [FromQuery] string token)
+    [HttpPost("confirm-email")]
+    public async Task<IActionResult> ConfirmEmail([FromBody] ConfirmEmailRequest request)
     {
-        var baseUrl = _configuration["App:BaseUrl"];
-        var user = await _userManager.FindByIdAsync(userId);
-        if (user == null)
-        {
-            return NotFound("User not found.");
-        }
+        var user = await _userManager.FindByIdAsync(request.UserId);
+        if (user == null) return BadRequest(new { message = "Invalid confirmation link." });
 
         string decodedToken;
         try
         {
-            decodedToken = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(token));
+            decodedToken = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(request.Token));
         }
         catch
         {
-            return BadRequest("Invalid token.");
+            return BadRequest(new { message = "Invalid or malformed confirmation link." });
         }
 
         var result = await _userManager.ConfirmEmailAsync(user, decodedToken);
-        if (!result.Succeeded)
-        {
-            return BadRequest(result.Errors);
-        }
+        if (!result.Succeeded) return BadRequest(new { message = "Confirmation failed. The link may have expired." });
 
         if (user.Status != UserStatus.Blocked)
         {
@@ -114,7 +107,7 @@ public class AuthController : ControllerBase
             await _userManager.UpdateAsync(user);
         }
 
-        return Ok(new { message = "Email confirmed successfully. You can now log in." });
+        return Ok(new { message = "Email confirmed successfully." });
     }
 
     [HttpGet("me")]
@@ -122,5 +115,12 @@ public class AuthController : ControllerBase
     {
         var user = await _userManager.GetUserAsync(User);
         return Ok(new { user!.Name, user.Email, user.Status });
+    }
+
+    [HttpPost("logout")]
+    public async Task<IActionResult> Logout()
+    {
+        await _signInManager.SignOutAsync();
+        return Ok(new { message = "Logged out successfully." });
     }
 }
