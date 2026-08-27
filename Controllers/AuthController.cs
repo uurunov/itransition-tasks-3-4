@@ -85,6 +85,7 @@ public class AuthController : ControllerBase
     [HttpGet("confirm-email")]
     public async Task<IActionResult> ConfirmEmail([FromQuery] string userId, [FromQuery] string token)
     {
+        var baseUrl = _configuration["App:BaseUrl"];
         var user = await _userManager.FindByIdAsync(userId);
         if (user == null)
         {

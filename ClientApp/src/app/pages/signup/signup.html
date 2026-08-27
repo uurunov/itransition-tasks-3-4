@@ -1,0 +1,90 @@
+<header class="absolute inset-x-0 top-8 flex flex-col justify-center items-center gap-2">
+  <p-avatar image="images/author.png" class="mr-2" size="xlarge" shape="circle" />
+  <p-chip label="Ulugbek Urunov" />
+</header>
+
+<main class="w-xs 2xl:w-sm">
+  @if (isSignUpSucceeded()) {
+    <div class="flex flex-col gap-4 items-center">
+      <p-avatar icon="pi pi-envelope" class="mr-2" size="xlarge" shape="circle" />
+
+      <p-panel header="Confirm your email">
+        <p class="m-0">
+          We've sent an email to <strong>{{ email() }}</strong
+          >. Check your inbox to activate your account.
+        </p>
+      </p-panel>
+
+      <p-button label="Back to login" size="small" (click)="onSignIn()" />
+    </div>
+  } @else {
+    <h2 class="text-2xl mb-6 text-center">Sign up for the app</h2>
+
+    <form (ngSubmit)="onSubmit()" pFocusTrap class="flex flex-col gap-4">
+      <p-iconfield>
+        <p-inputicon class="pi pi-user" />
+        <input
+          pInputText
+          placeholder="Name"
+          id="username"
+          type="text"
+          [ngModel]="username()"
+          (ngModelChange)="username.set($event)"
+          name="username"
+          class="w-full"
+          required
+        />
+      </p-iconfield>
+
+      <p-iconfield>
+        <p-inputicon class="pi pi-envelope" />
+        <input
+          pInputText
+          placeholder="Email"
+          id="email"
+          type="email"
+          [ngModel]="email()"
+          (ngModelChange)="email.set($event)"
+          name="email"
+          class="w-full"
+          required
+        />
+      </p-iconfield>
+
+      <p-iconfield>
+        <p-inputicon class="pi pi-lock" />
+        <p-password
+          [ngModel]="password()"
+          (ngModelChange)="password.set($event)"
+          autocomplete="off"
+          [toggleMask]="true"
+          placeholder="Password"
+          name="password"
+          fluid
+          required
+        />
+      </p-iconfield>
+
+      @if (errorMessage()) {
+        <p-message severity="error" size="small" variant="simple">{{ errorMessage() }}</p-message>
+      }
+
+      <p-button
+        type="submit"
+        label="Sign Up"
+        [loading]="isLoading()"
+        styleClass="w-full"
+        [disabled]="isLoading()"
+      />
+    </form>
+
+    <div class="flex items-center justify-center">
+      <h6 class="text-sm">Already have an account?</h6>
+      <p-button label="Sign in" size="small" (click)="onSignIn()" link />
+    </div>
+  }
+</main>
+
+<footer class="absolute inset-x-0 bottom-8 flex justify-center items-center gap-2">
+  <p-chip class="text-sm" label="uurunov.dev@gmail.com" icon="pi pi-google" />
+</footer>
