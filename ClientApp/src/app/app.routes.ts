@@ -7,10 +7,15 @@ import { userGuard } from './guards/user-guard';
 import { EmailConfirm } from './pages/email-confirmation/email-confirm';
 
 export const routes: Routes = [
-  { path: 'login', component: Login, canActivate: [guestGuard] },
-  { path: 'register', component: Signup, canActivate: [guestGuard] },
-  { path: 'email-confirmation', component: EmailConfirm, canActivate: [guestGuard] },
-  { path: 'dashboard', component: Dashboard, canActivate: [userGuard] },
+  { path: 'login', component: Login, canActivate: [guestGuard], title: 'Sign in' },
+  { path: 'register', component: Signup, canActivate: [guestGuard], title: 'Sign up' },
+  {
+    path: 'email-confirmation',
+    component: EmailConfirm,
+    canActivate: [guestGuard],
+    title: 'Confirm your email',
+  },
+  { path: 'dashboard', component: Dashboard, canActivate: [userGuard], title: 'Dashboard' },
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
   { path: '**', redirectTo: 'login' },
 ];

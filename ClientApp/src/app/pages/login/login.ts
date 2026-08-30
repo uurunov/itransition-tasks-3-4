@@ -53,6 +53,7 @@ export class Login {
         this.router.navigate(['dashboard']);
       },
       error: (err) => {
+        console.log(err);
         this.isLoading.set(false);
         this.messageService.add({
           severity: 'error',

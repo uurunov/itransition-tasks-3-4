@@ -1,21 +1,132 @@
 <div class="h-screen w-screen flex flex-col gap-6 p-4">
   <header>
-    <p-toolbar>
-      <ng-template #start>
-        <p-avatar [label]="currentUser()?.name.at(0)" class="mr-2" shape="circle" />
-        <p-chip [label]="currentUser()?.email" class="text-xs" />
-      </ng-template>
-      <ng-template #end>
+    <p-card>
+      <div class="flex items-center justify-between">
+        <p-chip [label]="'Hi, ' + currentUser()?.name" />
         <p-button
           label="Logout"
           icon="pi pi-sign-out"
           severity="danger"
-          variant="outlined"
           size="small"
           (click)="onLogout($event)"
         />
+      </div>
+    </p-card>
+  </header>
+  <main class="grow rounded-2xl drop-shadow-sm p-4 flex flex-col gap-4">
+    <h2 class="text-2xl text-center mb-4">User Management</h2>
+
+    <p-toolbar [style]="{ 'border-radius': '.8rem' }">
+      <ng-template #start>
+        <p-button
+          icon="pi pi-lock"
+          variant="outlined"
+          label="Block"
+          aria-label="Block"
+          severity="info"
+          size="small"
+          class="mr-2"
+          pTooltip="Block users"
+          tooltipPosition="bottom"
+          (click)="onToolbarActionBtn('block', $event)"
+          [disabled]="!selectedUsers().length"
+        />
+        <p-button
+          icon="pi pi-unlock"
+          variant="outlined"
+          aria-label="Unblock"
+          severity="info"
+          size="small"
+          class="mr-2"
+          pTooltip="Unblock users"
+          tooltipPosition="bottom"
+          (click)="onToolbarActionBtn('unblock', $event)"
+          [disabled]="!selectedUsers().length"
+        />
+        <p-button
+          icon="pi pi-trash"
+          variant="outlined"
+          aria-label="Delete"
+          severity="danger"
+          size="small"
+          class="mr-2"
+          pTooltip="Delete users"
+          tooltipPosition="bottom"
+          (click)="onToolbarActionBtn('delete', $event)"
+          [disabled]="!selectedUsers().length"
+        />
+        <p-button
+          icon="pi pi-users"
+          variant="outlined"
+          aria-label="Delete Unverified"
+          severity="danger"
+          size="small"
+          pTooltip="Delete unverified users"
+          tooltipPosition="bottom"
+          (click)="onToolbarActionBtn('delete-unverified', $event)"
+          [disabled]="!hasUnverifiedUsers"
+        />
+      </ng-template>
+      <ng-template #end>
+        <p-iconfield iconPosition="left">
+          <p-inputicon class="pi pi-search" />
+          <input
+            type="text"
+            pInputText
+            placeholder="Search by email"
+            pSize="small"
+            (input)="search.set($event.target.value)"
+          />
+        </p-iconfield>
       </ng-template>
     </p-toolbar>
-  </header>
-  <main class="grow">Bugaga</main>
+
+    <p-table
+      [value]="users()"
+      [(selection)]="selectedUsers"
+      selectionMode="multiple"
+      [loading]="usersResource.isLoading()"
+      dataKey="id"
+      [paginator]="users.length > 5"
+      [rows]="5"
+    >
+      <ng-template #header>
+        <tr>
+          <th style="width: 4rem">
+            <p-tableHeaderCheckbox />
+          </th>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Status</th>
+          <th>Last seen</th>
+          <th>Created at</th>
+        </tr>
+      </ng-template>
+      <ng-template #body let-user>
+        <tr
+          [ngClass]="{
+            'bg-slate-100! text-slate-900/50! dark:bg-slate-900/60! dark:text-slate-400/40!':
+              user.status === 2,
+          }"
+        >
+          <td>
+            <p-tableCheckbox [value]="user" />
+          </td>
+          <td>{{ user.name }}</td>
+          <td>{{ user.email }}</td>
+          <td>
+            <p-tag
+              [pTooltip]="user.status === 0 ? 'Check your email and verify account' : ''"
+              [severity]="user.status === 0 ? 'warn' : user.status === 1 ? 'success' : 'danger'"
+              [value]="UserStatusLabel[user.status]"
+            />
+          </td>
+          <td [pTooltip]="(user.lastLoginTime! | date: 'medium') ?? ''" tooltipPosition="bottom">
+            {{ user.lastLoginTime ? (user.lastLoginTime | timeago) : '' }}
+          </td>
+          <td>{{ user.createdAt | date: 'medium' }}</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </main>
 </div>

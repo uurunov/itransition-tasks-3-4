@@ -36,15 +36,15 @@ public class AuthController : ControllerBase
             return Unauthorized(new { message = "Invalid email or password." });
         }
 
-        if (user.Status == UserStatus.Blocked)
-        {
-            return Unauthorized(new { message = "Your account is blocked. Please contact support." });
-        }
-
         var result = await _signInManager.PasswordSignInAsync(user, request.Password, isPersistent: true, lockoutOnFailure: false);
         if (!result.Succeeded)
         {
             return Unauthorized(new { message = "Invalid email or password." });
+        }
+
+        if (user.Status == UserStatus.Blocked)
+        {
+            return Unauthorized(new { message = "Your account is blocked. Please contact support." });
         }
 
         user.LastLoginTime = DateTime.UtcNow;

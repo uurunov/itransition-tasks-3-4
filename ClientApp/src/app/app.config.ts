@@ -12,6 +12,8 @@ import { credentialInterceptor } from './interceptors/credential-interceptor';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { Auth } from './services/auth';
+import { provideTimeago } from 'ngx-timeago';
+import { authErrorInterceptor } from './interceptors/auth-error';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -21,7 +23,8 @@ export const appConfig: ApplicationConfig = {
       return firstValueFrom(authService.checkStatus());
     }),
     provideRouter(routes),
-    provideHttpClient(withInterceptors([credentialInterceptor])),
+    provideHttpClient(withInterceptors([credentialInterceptor, authErrorInterceptor])),
     provideOptimus({ theme: { preset: Aura } }),
+    provideTimeago(),
   ],
 };

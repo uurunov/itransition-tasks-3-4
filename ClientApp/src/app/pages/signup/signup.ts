@@ -52,20 +52,23 @@ export class Signup {
         next: () => {
           this.isLoading.set(false);
           this.isSignUpSucceeded.set(true);
-          // this.messageService.add({
-          //   severity: 'success',
-          //   summary: 'Success',
-          //   detail: 'Registration successful.',
-          // });
         },
         error: (err) => {
+          console.log(err);
           this.isLoading.set(false);
+
+          if (err.status === 400) {
+            const errorMsg: { code: string; description: string }[] = err.error;
+            this.errorMessage.set(errorMsg[0].description);
+          } else {
+            this.errorMessage.set(err.error?.message ?? 'Registration failed. Please try again.');
+          }
+
           this.messageService.add({
             severity: 'error',
             summary: 'Failure',
             detail: 'Registration failed.',
           });
-          this.errorMessage.set(err.error?.message ?? 'Registration failed. Please try again.');
         },
       });
   }

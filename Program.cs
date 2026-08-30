@@ -6,51 +6,67 @@ using UurunovApp.Models;
 using UurunovApp.Services;
 using UurunovApp.Filters;
 
-var builder = WebApplication.CreateBuilder(args);
-
-builder.Services.AddHttpClient();
-builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-builder.Services.AddScoped<IEmailSender, BrevoEmailSender>();
-builder.Services.AddScoped<ActiveUserFilter>();
-
-builder.Services.AddControllers(options =>
+try
 {
-    options.Filters.AddService<ActiveUserFilter>();
-});
+    var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddDataProtection();
-builder.Services.AddAuthentication(IdentityConstants.ApplicationScheme).AddCookie(IdentityConstants.ApplicationScheme);
-builder.Services.AddIdentityCore<ApplicationUser>(options => {
-    options.Password.RequireDigit = false;
-    options.Password.RequireLowercase = false;
-    options.Password.RequireUppercase = false;
-    options.Password.RequireNonAlphanumeric = false;
-    options.Password.RequiredLength = 1;
-}).AddEntityFrameworkStores<ApplicationDbContext>().AddDefaultTokenProviders().AddSignInManager();
+    builder.Services.AddHttpClient();
+    builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-var app = builder.Build();
+    builder.Services.AddScoped<IEmailSender, BrevoEmailSender>();
+    builder.Services.AddScoped<ActiveUserFilter>();
 
-app.MapGet("/app/uurunov_dev_gmail_com", (string? x, string? y) =>
-{
-    if (x != null && y != null)
+    builder.Services.AddControllers(options =>
     {
-        string regexPattern = @"^[0-9]+$";
+        options.Filters.AddService<ActiveUserFilter>();
+    });
 
-        bool isXValid = Regex.Match(x, regexPattern).Success;
-        bool isYValid = Regex.Match(y, regexPattern).Success;
+    builder.Services.AddDataProtection();
+    builder.Services.AddAuthentication(IdentityConstants.ApplicationScheme).AddCookie(IdentityConstants.ApplicationScheme);
+    builder.Services.AddIdentityCore<ApplicationUser>(options => {
+        options.Password.RequireDigit = false;
+        options.Password.RequireLowercase = false;
+        options.Password.RequireUppercase = false;
+        options.Password.RequireNonAlphanumeric = false;
+        options.Password.RequiredLength = 1;
+    }).AddEntityFrameworkStores<ApplicationDbContext>().AddDefaultTokenProviders().AddSignInManager();
 
-        if (isXValid && isYValid && BigInteger.TryParse(x, out BigInteger resultX) && resultX > 0 && BigInteger.TryParse(y, out BigInteger resultY) && resultY > 0)
+    var app = builder.Build();
+    app.UseStaticFiles();
+
+    app.MapGet("/app/uurunov_dev_gmail_com", (string? x, string? y) =>
+    {
+        if (x != null && y != null)
         {
-            return $"{resultX / BigInteger.GreatestCommonDivisor(resultX, resultY) * resultY}";
+            string regexPattern = @"^[0-9]+$";
+
+            bool isXValid = Regex.Match(x, regexPattern).Success;
+            bool isYValid = Regex.Match(y, regexPattern).Success;
+
+            if (isXValid && isYValid && BigInteger.TryParse(x, out BigInteger resultX) && resultX > 0 && BigInteger.TryParse(y, out BigInteger resultY) && resultY > 0)
+            {
+                return $"{resultX / BigInteger.GreatestCommonDivisor(resultX, resultY) * resultY}";
+            }
         }
+
+        return "NaN";
+    });
+
+    app.UseAuthentication();
+    app.UseAuthorization();
+
+    app.MapControllers();
+    app.MapFallbackToFile("index.html");
+    app.Run();
+} catch (Exception ex)
+{
+    try
+    {
+        File.WriteAllText(
+            Path.Combine(AppContext.BaseDirectory, "startup-error.txt"),
+            ex.ToString());
     }
+    catch {}
 
-    return "NaN";
-});
-
-app.UseAuthentication();
-app.UseAuthorization();
-
-app.MapControllers();
-app.Run();
+    throw;
+}

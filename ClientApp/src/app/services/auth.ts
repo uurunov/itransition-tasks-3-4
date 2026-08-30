@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Service, signal } from '@angular/core';
-import { catchError, Observable, of, tap } from 'rxjs';
+import { catchError, of, tap } from 'rxjs';
 
 export interface LoginRequest {
   email: string;
@@ -38,6 +38,11 @@ export class Auth {
     return this.http.post('/api/Auth/register', request);
   }
 
+  clearAppUserSession() {
+    this.currentUser.set(null);
+    this.isAuthenticated.set(false);
+  }
+
   checkStatus() {
     return this.http.get<AppUser>('/api/Auth/me').pipe(
       tap((user) => {
@@ -45,20 +50,14 @@ export class Auth {
         this.isAuthenticated.set(true);
       }),
       catchError(() => {
-        this.currentUser.set(null);
-        this.isAuthenticated.set(false);
+        this.clearAppUserSession();
         return of(null);
       }),
     );
   }
 
   logout() {
-    return this.http.post('/api/Auth/logout', {}).pipe(
-      tap(() => {
-        this.isAuthenticated.set(false);
-        this.currentUser.set(null);
-      }),
-    );
+    return this.http.post('/api/Auth/logout', {}).pipe(tap(() => this.clearAppUserSession()));
   }
 
   confirmEmail(userId: string, token: string) {
