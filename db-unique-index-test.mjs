@@ -1,7 +1,7 @@
 const email = `uniqueindextest@example.com`;
 const body = JSON.stringify({ name: "User", email, password: "U" });
 
-const url = "http://localhost:5227/api/Auth/register";
+const url = "http://uurunov.somee.com/api/Auth/register";
 
 const makeRequest = (label) =>
   fetch(url, {
