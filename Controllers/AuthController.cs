@@ -6,6 +6,8 @@ using UurunovApp.Services;
 using Microsoft.AspNetCore.WebUtilities;
 using System.Text;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Data.SqlClient;
 
 namespace UurunovApp.Controllers;
 
@@ -23,6 +25,11 @@ public class AuthController : ControllerBase
         _emailSender = emailSender;
         _configuration = configuration;
         _signInManager = signInManager;
+    }
+
+    private static bool IsUniqueEmailViolation(DbUpdateException ex)
+    {
+        return ex.InnerException is SqlException sqlEx && (sqlEx.Number == 2601 || sqlEx.Number == 2627);
     }
 
     [AllowAnonymous]
@@ -64,7 +71,15 @@ public class AuthController : ControllerBase
             Name = request.Name
         };
 
-        var result = await _userManager.CreateAsync(user, request.Password);
+        IdentityResult result;
+
+        try
+        {
+            result = await _userManager.CreateAsync(user, request.Password);
+        } catch (DbUpdateException ex) when (IsUniqueEmailViolation(ex))
+        {
+            return Conflict(new { message = "An account with this email already exists." });
+        }
 
         if (!result.Succeeded)
         {
