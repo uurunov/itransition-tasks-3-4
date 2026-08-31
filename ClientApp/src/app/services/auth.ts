@@ -1,6 +1,7 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpContext } from '@angular/common/http';
 import { inject, Service, signal } from '@angular/core';
 import { catchError, of, tap } from 'rxjs';
+import { SKIP_AUTH_REDIRECT } from '../interceptors/auth-error';
 
 export interface LoginRequest {
   email: string;
@@ -44,16 +45,18 @@ export class Auth {
   }
 
   checkStatus() {
-    return this.http.get<AppUser>('/api/Auth/me').pipe(
-      tap((user) => {
-        this.currentUser.set(user);
-        this.isAuthenticated.set(true);
-      }),
-      catchError(() => {
-        this.clearAppUserSession();
-        return of(null);
-      }),
-    );
+    return this.http
+      .get<AppUser>('/api/Auth/me', { context: new HttpContext().set(SKIP_AUTH_REDIRECT, true) })
+      .pipe(
+        tap((user) => {
+          this.currentUser.set(user);
+          this.isAuthenticated.set(true);
+        }),
+        catchError(() => {
+          this.clearAppUserSession();
+          return of(null);
+        }),
+      );
   }
 
   logout() {
